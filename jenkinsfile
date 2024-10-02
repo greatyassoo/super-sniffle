@@ -26,5 +26,12 @@ pipeline {
                 '''
             }
         }
+        stage('changed') {
+            steps {
+                echo "webhooking.."
+                sh '''
+                echo "testt.."
+                '''
+            }
     }
 }
