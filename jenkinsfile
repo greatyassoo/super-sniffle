@@ -1,6 +1,6 @@
 // pipeline {
 //     agent any
-    
+
 //     stages {
 //         stage('Build') {
 //             steps {
@@ -30,35 +30,34 @@
 // }
 
 pipeline {
-    agent any 
+    agent any
 
     stages {
         stage('Build Docker Image') {
             steps {
                 script {
                     // Build the Docker image using the Dockerfile in the current directory
-                    docker.build("python_app_image:${env.BUILD_ID}", ".")
+                    docker.build("python_app_image:${env.BUILD_ID}", '.')
                 }
             }
         }
-
-             stage('Push to ECR') {
+        stage('Push to ECR') {
             steps {
                 script {
                     def awsRegion = 'us-east-1' // Your AWS region
                     def ecrRepo = 'python/depi_project' // Your ECR repository name
                     def accountId = '539247483379' // Your AWS account ID
-                   
+
                     // AWS ECR login
                     sh """
                         aws ecr get-login-password --region ${awsRegion} | docker login --username AWS --password-stdin ${accountId}.dkr.ecr.${awsRegion}.amazonaws.com
                     """
 
-                    // Tag the image
-                    sh "docker tag python_app_image:${env.BUILD_ID} ${accountId}.dkr.ecr.${awsRegion}.amazonaws.com/${ecrRepo}:${env.BUILD_ID}"
+                    // Tag the image as latest
+                    sh "docker tag python_app_image:latest ${accountId}.dkr.ecr.${awsRegion}.amazonaws.com/${ecrRepo}:latest"
 
                     // Push the image to ECR
-                    sh "docker push ${accountId}.dkr.ecr.${awsRegion}.amazonaws.com/${ecrRepo}:${env.BUILD_ID}"
+                    sh "docker push ${accountId}.dkr.ecr.${awsRegion}.amazonaws.com/${ecrRepo}:latest"
                 }
             }
         }
