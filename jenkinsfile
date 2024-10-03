@@ -1,29 +1,44 @@
-pipeline {
-    agent any
+// pipeline {
+//     agent any
     
+//     stages {
+//         stage('Build') {
+//             steps {
+//                 echo "Building.."
+//                 sh '''
+//                 echo "doing build stuff.."
+//                 '''
+//             }
+//         }
+//         stage('Test') {
+//             steps {
+//                 echo "Testing.."
+//                 sh '''
+//                 echo "doing test stuff.."
+//                 '''
+//             }
+//         }
+//         stage('Deliver') {
+//             steps {
+//                 echo 'Deliver....'
+//                 sh '''
+//                 echo "doing delivery stuff.."
+//                 '''
+//             }
+//         }
+//     }
+// }
+
+pipeline {
+    agent any 
+
     stages {
-        stage('Build') {
+        stage('Build Docker Image') {
             steps {
-                echo "Building.."
-                sh '''
-                echo "doing build stuff.."
-                '''
-            }
-        }
-        stage('Test') {
-            steps {
-                echo "Testing.."
-                sh '''
-                echo "doing test stuff.."
-                '''
-            }
-        }
-        stage('Deliver') {
-            steps {
-                echo 'Deliver....'
-                sh '''
-                echo "doing delivery stuff.."
-                '''
+                script {
+                    // Build the Docker image using the Dockerfile in the current directory
+                    def image = docker.build("python_app_image:${env.BUILD_ID}", ".")
+                }
             }
         }
     }
