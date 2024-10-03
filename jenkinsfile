@@ -37,17 +37,28 @@ pipeline {
             steps {
                 script {
                     // Build the Docker image using the Dockerfile in the current directory
-                    def image = docker.build("python_app_image:${env.BUILD_ID}", ".")
+                    docker.build("python_app_image:${env.BUILD_ID}", ".")
                 }
             }
         }
 
-        stage('Run Docker Container') {
+             stage('Push to ECR') {
             steps {
                 script {
-                    // Run the Docker image as a container
-                    def image = "python_app_image:${env.BUILD_ID}"
-                    docker.image(image).run('-d --name my_python_app')
+                    def awsRegion = 'us-east-1' // Your AWS region
+                    def ecrRepo = 'python/depi_project' // Your ECR repository name
+                    def accountId = '539247483379' // Your AWS account ID
+                   
+                    // AWS ECR login
+                    sh """
+                        aws ecr get-login-password --region ${awsRegion} | docker login --username AWS --password-stdin ${accountId}.dkr.ecr.${awsRegion}.amazonaws.com
+                    """
+
+                    // Tag the image
+                    sh "docker tag python_app_image:${env.BUILD_ID} ${accountId}.dkr.ecr.${awsRegion}.amazonaws.com/${ecrRepo}:${env.BUILD_ID}"
+
+                    // Push the image to ECR
+                    sh "docker push ${accountId}.dkr.ecr.${awsRegion}.amazonaws.com/${ecrRepo}:${env.BUILD_ID}"
                 }
             }
         }
