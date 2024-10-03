@@ -45,20 +45,20 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script {
-                    def awsRegion = 'us-east-1' // Your AWS region
-                    def ecrRepo = 'python/depi_project' // Your ECR repository name
-                    def accountId = '539247483379' // Your AWS account ID
+                    // def awsRegion = 'us-east-1' // Your AWS region
+                    // def ecrRepo = 'python/depi_project' // Your ECR repository name
+                    // def accountId = '539247483379' // Your AWS account ID
 
                     // AWS ECR login
                     sh """
-                        aws ecr get-login-password --region ${awsRegion} | docker login --username AWS --password-stdin ${accountId}.dkr.ecr.${awsRegion}.amazonaws.com
+                        aws ecr get-login-password --region ${params.awsRegion} | docker login --username AWS --password-stdin ${params.accountId}.dkr.ecr.${params.awsRegion}.amazonaws.com
                     """
 
                     // Tag the image as latest
-                    sh "docker tag python_app_image:latest ${accountId}.dkr.ecr.${awsRegion}.amazonaws.com/${ecrRepo}:latest"
+                    sh "docker tag python_app_image:latest ${params.accountId}.dkr.ecr.${params.awsRegion}.amazonaws.com/${params.ecrRepo}:latest"
 
                     // Push the image to ECR
-                    sh "docker push ${accountId}.dkr.ecr.${awsRegion}.amazonaws.com/${ecrRepo}:latest"
+                    sh "docker push ${params.accountId}.dkr.ecr.${params.awsRegion}.amazonaws.com/${params.ecrRepo}:latest"
                 }
             }
         }
