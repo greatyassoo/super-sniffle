@@ -30,17 +30,18 @@
 // }
 
 pipeline {
-    agent any
+    agent any 
 
     stages {
         stage('Build Docker Image') {
             steps {
                 script {
                     // Build the Docker image using the Dockerfile in the current directory
-                    docker.build("python_app_image:${env.BUILD_ID}", '.')
+                    def image = docker.build("python_app_image:latest", ".") // Tag as latest
                 }
             }
         }
+
         stage('Push to ECR') {
             steps {
                 script {
@@ -63,4 +64,3 @@ pipeline {
         }
     }
 }
-
