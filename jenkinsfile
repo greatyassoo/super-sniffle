@@ -41,5 +41,16 @@ pipeline {
                 }
             }
         }
+
+        stage('Run Docker Container') {
+            steps {
+                script {
+                    // Run the Docker image as a container
+                    def image = "python_app_image:${env.BUILD_ID}"
+                    docker.image(image).run('-d --name my_python_app')
+                }
+            }
+        }
     }
 }
+
