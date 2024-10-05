@@ -1,9 +1,24 @@
-FROM python:3.11-slim
+FROM jenkins/jenkins:2.462.2-jdk17
 
-WORKDIR /app
+USER root
 
-# Copy the current directory contents (including main.py) to /app in the container
-COPY main.py .
+# Install lsb-release
+RUN apt-get update && apt-get install -y lsb-release
 
-# Define the command to run the script
-CMD ["python", "main.py"]
+# Add Docker GPG key and repository
+RUN curl -fsSLo /usr/share/keyrings/docker-archive-keyring.asc https://download.docker.com/linux/debian/gpg
+RUN sh -c 'echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.asc] https://download.docker.com/linux/debian $(lsb_release -cs) stable" > /etc/apt/sources.list.d/docker.list'
+
+# Install Docker CLI
+RUN apt-get update && apt-get install -y docker-ce-cli
+
+# Install AWS CLI
+RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" \
+    && unzip awscliv2.zip \
+    && ./aws/install \
+    && rm -rf awscliv2.zip aws
+
+USER jenkins
+
+# Install Jenkins plugins
+RUN jenkins-plugin-cli --plugins "blueocean docker-workflow"
