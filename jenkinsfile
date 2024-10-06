@@ -1,43 +1,12 @@
-// pipeline {
-//     agent any
-
-//     stages {
-//         stage('Build') {
-//             steps {
-//                 echo "Building.."
-//                 sh '''
-//                 echo "doing build stuff.."
-//                 '''
-//             }
-//         }
-//         stage('Test') {
-//             steps {
-//                 echo "Testing.."
-//                 sh '''
-//                 echo "doing test stuff.."
-//                 '''
-//             }
-//         }
-//         stage('Deliver') {
-//             steps {
-//                 echo 'Deliver....'
-//                 sh '''
-//                 echo "doing delivery stuff.."
-//                 '''
-//             }
-//         }
-//     }
-// }
-
 pipeline {
-    agent any 
+    agent any
 
     stages {
         stage('Build Docker Image') {
             steps {
                 script {
                     // Build the Docker image using the Dockerfile in the current directory
-                    def image = docker.build("python_app_image:latest", ".") // Tag as latest
+                    docker.build('python_app_image:latest', '.') // Tag as latest
                 }
             }
         }
@@ -45,10 +14,6 @@ pipeline {
         stage('Push to ECR') {
             steps {
                 script {
-                    // def awsRegion = 'us-east-1' // Your AWS region
-                    // def ecrRepo = 'python/depi_project' // Your ECR repository name
-                    // def accountId = '539247483379' // Your AWS account ID
-
                     // AWS ECR login
                     sh """
                         aws ecr get-login-password --region ${params.awsRegion} | docker login --username AWS --password-stdin ${params.accountId}.dkr.ecr.${params.awsRegion}.amazonaws.com
@@ -60,6 +25,37 @@ pipeline {
                     // Push the image to ECR
                     sh "docker push ${params.accountId}.dkr.ecr.${params.awsRegion}.amazonaws.com/${params.ecrRepo}:latest"
                 }
+            }
+        }
+
+        stage('Apply/Notify Kubernetes') {
+            steps {
+                sshPublisher(
+                    publishers: [
+                        sshPublisherDesc(
+                            configName: 'kuberenetes_server',
+                            transfers: [
+                                sshTransfer(
+                                    cleanRemote: false,
+                                    excludes: '',
+                                    execCommand: 'kubectl apply -f test.txt 2> log.txt',
+                                    execTimeout: 120000,
+                                    flatten: false,
+                                    makeEmptyDirs: false,
+                                    noDefaultExcludes: false,
+                                    patternSeparator: '[, ]+',
+                                    remoteDirectory: '',
+                                    remoteDirectorySDF: false,
+                                    removePrefix: '',
+                                    sourceFiles: ''
+                                )
+                            ],
+                            usePromotionTimestamp: false,
+                            useWorkspaceInPromotion: false,
+                            verbose: false
+                        )
+                    ]
+                )
             }
         }
     }
